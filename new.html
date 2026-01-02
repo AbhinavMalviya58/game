@@ -1,0 +1,60 @@
+Color Match Puzzle
+
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Color Match</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial;
+            background: #f2f2f2;
+        }
+
+        .box {
+            width: 100px;
+            height: 100px;
+            display: inline-block;
+            margin: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>Match the Color</h2>
+    <p><a href="index.html">← Back to index</a></p>
+    <div id="target" class="box"></div>
+    <br><br>
+    <div id="options"></div>
+
+    <script>
+        const colors = ["red", "blue", "green", "yellow", "purple"];
+
+        function startGame() {
+            const target = colors[Math.floor(Math.random() * colors.length)];
+            document.getElementById("target").style.background = target;
+
+            const options = document.getElementById("options");
+            options.innerHTML = "";
+
+            colors.forEach(color => {
+                const box = document.createElement("div");
+                box.className = "box";
+                box.style.background = color;
+                box.onclick = () => {
+                    alert(color === target ? "Correct!" : "Wrong!");
+                    startGame();
+                };
+                options.appendChild(box);
+            });
+        }
+
+        startGame();
+    </script>
+</body>
+
+</html>
