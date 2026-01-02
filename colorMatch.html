@@ -1,0 +1,143 @@
+Color Match Puzzle
+
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Color Match</title>
+  <style>
+    body {
+      text-align: center;
+      font-family: Arial;
+      background: #f2f2f2;
+    }
+
+    .box {
+      width: 100px;
+      height: 100px;
+      display: inline-block;
+      margin: 10px;
+      cursor: pointer;
+    }
+  </style>
+  <style>
+    #hud {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      align-items: center;
+      padding: 10px 8px;
+    }
+
+    #hud .pill {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border-radius: 12px;
+      padding: 8px 14px;
+      font-weight: 600;
+      min-width: 80px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(4px);
+    }
+
+    #overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    #overlay.show {
+      display: flex;
+    }
+
+    #overlay .card {
+      background: #fff;
+      padding: 20px 24px;
+      border-radius: 12px;
+      width: 280px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    #target {
+      width: 120px;
+      height: 120px;
+      display: inline-block;
+      border-radius: 12px;
+      border: 4px solid #fff;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    #options {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-gap: 12px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .pop {
+      position: absolute;
+      color: #222;
+      font-weight: 700;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="hud">
+    <div class="pill">Score: <span id="score">0</span></div>
+    <div class="pill">Level: <span id="level">1</span></div>
+    <div class="pill">Time: <span id="time">30</span>s</div>
+    <button id="mute" class="pill">Sound: On</button>
+  </div>
+
+  <h2>Match the Color</h2>
+  <script src="menu.js"></script>
+  <div id="target" class="box"></div>
+  <br><br>
+  <div id="options"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const palette = ["red", "blue", "green", "yellow", "purple", "orange", "pink", "cyan", "brown", "gray"];
+      const targetEl = document.getElementById("target");
+      const optionsEl = document.getElementById("options");
+      const scoreEl = document.getElementById("score");
+      const levelEl = document.getElementById("level");
+      const timeEl = document.getElementById("time");
+      const overlay = document.getElementById("overlay");
+      const muteBtn = document.getElementById("mute");
+      const startBtn = document.getElementById("startBtn");
+      let state = 'start', score = 0, level = 1, streak = 0, timeLeft = 30, timerId = null, ac = null, ready = false, muted = false;
+      function unlock() { if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume(); ready = true; }
+      function sfx(t) { if (!ready || muted) return; const now = ac.currentTime, o = ac.createOscillator(), g = ac.createGain(); let f = 600, d = 0.08, w = 'sine'; if (t === 'ok') { f = 880; w = 'triangle'; d = 0.06; } else if (t === 'bad') { f = 200; w = 'sawtooth'; d = 0.12; } o.type = w; o.frequency.setValueAtTime(f, now); g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime(0.3, now + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, now + d); o.connect(g); g.connect(ac.destination); o.start(now); o.stop(now + d + 0.02); }
+      function setState(s) { state = s; if (s === 'start' || s === 'over') overlay.classList.add('show'); else overlay.classList.remove('show'); }
+      function startGame() { unlock(); score = 0; level = 1; streak = 0; timeLeft = 30; updateHUD(); setState('play'); if (timerId) clearInterval(timerId); timerId = setInterval(() => { timeLeft -= 1; if (timeLeft <= 0) { timeLeft = 0; gameOver(); } updateHUD(); }, 1000); nextRound(); }
+      function gameOver() { setState('over'); if (timerId) { clearInterval(timerId); timerId = null; } const card = overlay.querySelector('.card'); card.innerHTML = '<h3>Game Over</h3><p>Score: ' + score + '</p><p>Level: ' + level + '</p><button id="startBtn">Restart</button>'; overlay.querySelector('#startBtn').onclick = startGame; }
+      function updateHUD() { scoreEl.textContent = score; levelEl.textContent = level; timeEl.textContent = timeLeft; muteBtn.textContent = 'Sound: ' + (muted ? 'Off' : 'On'); }
+      function nextRound() { optionsEl.innerHTML = ''; let count = Math.min(3 + level, 6); const pick = Math.floor(Math.random() * palette.length); const target = palette[pick]; targetEl.style.background = target; const set = new Set([target]); while (set.size < count) { set.add(palette[Math.floor(Math.random() * palette.length)]); } const arr = Array.from(set); for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = arr[i]; arr[i] = arr[j]; arr[j] = t; } arr.forEach(color => { const box = document.createElement('div'); box.className = 'box'; box.style.background = color; box.onclick = () => handlePick(color, target, box); optionsEl.appendChild(box); }); }
+      function pop(x, y, text, color) { const el = document.createElement('div'); el.className = 'pop'; el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.color = color; el.textContent = text; document.body.appendChild(el); let a = 1, dy = -1.2; const id = setInterval(() => { a -= 0.04; y += dy; el.style.top = y + 'px'; el.style.opacity = a; if (a <= 0) { clearInterval(id); el.remove(); } }, 16); }
+      function handlePick(color, target, elem) { if (state !== 'play') return; const r = elem.getBoundingClientRect(); if (color === target) { streak += 1; const gain = 100 + Math.max(0, (streak - 1) * 20); score += gain; timeLeft = Math.min(99, timeLeft + 2); sfx('ok'); pop(r.left + r.width / 2, r.top, '+' + gain, '#4ade80'); if (streak % 3 === 0) { level += 1; } updateHUD(); nextRound(); } else { streak = 0; score = Math.max(0, score - 50); timeLeft = Math.max(0, timeLeft - 3); sfx('bad'); pop(r.left + r.width / 2, r.top, '-50', '#f87171'); updateHUD(); if (timeLeft <= 0) { gameOver(); } } }
+      startBtn.onclick = startGame;
+      muteBtn.onclick = function () { muted = !muted; updateHUD(); };
+    });
+  </script>
+  <div id="overlay" class="show">
+    <div class="card">
+      <h3>Color Match</h3>
+      <p>Tap the color that matches the target swatch.</p>
+      <p>Earn points for streaks. Levels increase difficulty.</p>
+      <button id="startBtn">Start</button>
+    </div>
+  </div>
+</body>
+
+</html>

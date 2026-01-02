@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Circle Shooter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      background: #020617;
+      font-family: Arial, sans-serif;
+      color: #fff;
+      text-align: center;
+    }
+
+    canvas {
+      display: block;
+      margin: 20px auto;
+      background: #020617;
+    }
+
+    .hud {
+      display: flex;
+      justify-content: space-around;
+      font-size: 16px;
+    }
+
+    .btn {
+      background: #22d3ee;
+      color: #000;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-weight: bold;
+      margin-top: 10px;
+      display: inline-block;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>🎯 Circle Shooter</h2>
+
+  <div class="hud">
+    <div>Score: <span id="score">0</span></div>
+    <div>Combo: <span id="combo">1x</span></div>
+    <div>Best: <span id="best">0</span></div>
+  </div>
+
+  <canvas id="game" width="360" height="520"></canvas>
+
+  <div id="gameOver" style="display:none;">
+    <h3>Missed!</h3>
+    <div class="btn" onclick="restart()">Play Again</div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    const radius = 120;
+
+    let angle = 0;
+    let speed = 0.04;
+    let targetAngle = Math.random() * Math.PI * 2;
+    let targetSize = Math.PI / 5;
+
+    let score = 0;
+    let combo = 1;
+    let playing = true;
+
+    let best = localStorage.getItem("circleBest") || 0;
+    document.getElementById("best").innerText = best;
+
+    canvas.addEventListener("click", shoot);
+    canvas.addEventListener("touchstart", shoot);
+
+    function shoot() {
+      if (!playing) return;
+
+      const diff = Math.abs(normalize(angle - targetAngle));
+      if (diff < targetSize / 2) {
+        score += combo;
+        combo++;
+        speed += 0.004;
+        targetSize *= 0.95;
+        targetAngle = Math.random() * Math.PI * 2;
+      } else {
+        endGame();
+      }
+
+      document.getElementById("score").innerText = score;
+      document.getElementById("combo").innerText = combo + "x";
+    }
+
+    function normalize(a) {
+      return Math.atan2(Math.sin(a), Math.cos(a));
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Outer circle
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = "#334155";
+      ctx.lineWidth = 10;
+      ctx.stroke();
+
+      // Target zone
+      ctx.beginPath();
+      ctx.arc(
+        cx,
+        cy,
+        radius,
+        targetAngle - targetSize / 2,
+        targetAngle + targetSize / 2
+      );
+      ctx.strokeStyle = "#22d3ee";
+      ctx.lineWidth = 12;
+      ctx.stroke();
+
+      // Rotating needle
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(
+        cx + Math.cos(angle) * radius,
+        cy + Math.sin(angle) * radius
+      );
+      ctx.strokeStyle = "#f43f5e";
+      ctx.lineWidth = 6;
+      ctx.stroke();
+
+      if (playing) {
+        angle += speed;
+      }
+
+      requestAnimationFrame(draw);
+    }
+
+    function endGame() {
+      playing = false;
+      document.getElementById("gameOver").style.display = "block";
+
+      if (score > best) {
+        best = score;
+        localStorage.setItem("circleBest", best);
+        document.getElementById("best").innerText = best;
+      }
+
+      // 👉 SHOW INTERSTITIAL AD HERE
+    }
+
+    function restart() {
+      score = 0;
+      combo = 1;
+      angle = 0;
+      speed = 0.04;
+      targetSize = Math.PI / 5;
+      targetAngle = Math.random() * Math.PI * 2;
+      playing = true;
+
+      document.getElementById("score").innerText = score;
+      document.getElementById("combo").innerText = combo + "x";
+      document.getElementById("gameOver").style.display = "none";
+    }
+
+    draw();
+  </script>
+
+  <script src="menu.js"></script>
+</body>
+
+</html>

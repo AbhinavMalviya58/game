@@ -1,0 +1,117 @@
+Snake Reloaded (Modern Snake)
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Snake Reloaded</title>
+  <style>
+    body {
+      background: #0f172a;
+      color: #fff;
+      text-align: center;
+      font-family: Arial;
+    }
+
+    canvas {
+      background: #020617;
+      margin-top: 20px;
+      border-radius: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>Snake Reloaded</h2>
+  <div>Score: <span id="score">0</span> | Best: <span id="best">0</span></div>
+
+  <canvas id="game" width="360" height="360"></canvas>
+
+  <script>
+    const c = document.getElementById("game");
+    const ctx = c.getContext("2d");
+    const box = 18;
+
+    let snake, food, dir, score, speed;
+    let best = localStorage.getItem("snakeBest") || 0;
+    document.getElementById("best").innerText = best;
+
+    function init() {
+      snake = [{ x: 9 * box, y: 9 * box }];
+      food = spawnFood();
+      dir = "RIGHT";
+      score = 0;
+      speed = 120;
+    }
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowUp" && dir !== "DOWN") dir = "UP";
+      if (e.key === "ArrowDown" && dir !== "UP") dir = "DOWN";
+      if (e.key === "ArrowLeft" && dir !== "RIGHT") dir = "LEFT";
+      if (e.key === "ArrowRight" && dir !== "LEFT") dir = "RIGHT";
+    });
+
+    function spawnFood() {
+      return {
+        x: Math.floor(Math.random() * 20) * box,
+        y: Math.floor(Math.random() * 20) * box
+      };
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, c.width, c.height);
+
+      snake.forEach((s, i) => {
+        ctx.fillStyle = i === 0 ? "#22d3ee" : "#0891b2";
+        ctx.fillRect(s.x, s.y, box, box);
+      });
+
+      ctx.fillStyle = "#f43f5e";
+      ctx.fillRect(food.x, food.y, box, box);
+
+      let head = { ...snake[0] };
+      if (dir === "UP") head.y -= box;
+      if (dir === "DOWN") head.y += box;
+      if (dir === "LEFT") head.x -= box;
+      if (dir === "RIGHT") head.x += box;
+
+      if (head.x < 0 || head.y < 0 || head.x >= 360 || head.y >= 360 || collision(head)) {
+        gameOver();
+        return;
+      }
+
+      if (head.x === food.x && head.y === food.y) {
+        score++;
+        document.getElementById("score").innerText = score;
+        food = spawnFood();
+        if (score % 5 === 0 && speed > 60) speed -= 10;
+      } else {
+        snake.pop();
+      }
+      snake.unshift(head);
+
+      setTimeout(draw, speed);
+    }
+
+    function collision(head) {
+      return snake.some(s => s.x === head.x && s.y === head.y);
+    }
+
+    function gameOver() {
+      if (score > best) {
+        best = score;
+        localStorage.setItem("snakeBest", best);
+      }
+      alert("Game Over! Score: " + score);
+      init();
+      draw();
+    }
+
+    init();
+    draw();
+  </script>
+  <script src="menu.js"></script>
+</body>
+
+</html>

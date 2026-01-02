@@ -1,0 +1,97 @@
+Brick Breaker Plus
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Brick Breaker Plus</title>
+  <style>
+    body {
+      background: #020617;
+      color: #fff;
+      text-align: center;
+      font-family: Arial;
+    }
+
+    canvas {
+      background: #020617;
+      margin-top: 20px;
+      border-radius: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>Brick Breaker Plus</h2>
+  <div>Score: <span id="score">0</span></div>
+
+  <canvas id="game" width="360" height="520"></canvas>
+
+  <script>
+    const c = document.getElementById("game"), ctx = c.getContext("2d");
+    let paddle = { x: 140, w: 80 }, ball = { x: 180, y: 260, dx: 3, dy: -3, r: 6 };
+    let bricks = [], score = 0;
+
+    for (let r = 0; r < 4; r++)
+      for (let i = 0; i < 6; i++)
+        bricks.push({ x: i * 55 + 20, y: r * 25 + 40, hit: false });
+
+    document.addEventListener("mousemove", e => {
+      const rect = c.getBoundingClientRect();
+      paddle.x = e.clientX - rect.left - paddle.w / 2;
+    });
+
+    function draw() {
+      ctx.clearRect(0, 0, c.width, c.height);
+
+      // paddle
+      ctx.fillStyle = "#22d3ee";
+      ctx.fillRect(paddle.x, 500, paddle.w, 10);
+
+      // ball
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+      ctx.fillStyle = "#f43f5e";
+      ctx.fill();
+
+      // bricks
+      bricks.forEach(b => {
+        if (!b.hit) {
+          ctx.fillStyle = "#38bdf8";
+          ctx.fillRect(b.x, b.y, 50, 15);
+        }
+      });
+
+      ball.x += ball.dx; ball.y += ball.dy;
+
+      if (ball.x < 0 || ball.x > 360) ball.dx *= -1;
+      if (ball.y < 0) ball.dy *= -1;
+      if (ball.y > 520) { alert("Game Over"); reset(); return; }
+
+      if (ball.x > paddle.x && ball.x < paddle.x + paddle.w && ball.y > 490)
+        ball.dy *= -1;
+
+      bricks.forEach(b => {
+        if (!b.hit && ball.x > b.x && ball.x < b.x + 50 && ball.y > b.y && ball.y < b.y + 15) {
+          b.hit = true;
+          ball.dy *= -1;
+          score += 10;
+          document.getElementById("score").innerText = score;
+        }
+      });
+
+      requestAnimationFrame(draw);
+    }
+    function reset() {
+      score = 0;
+      bricks.forEach(b => b.hit = false);
+      ball = { x: 180, y: 260, dx: 3, dy: -3, r: 6 };
+      draw();
+    }
+    draw();
+  </script>
+  <script src="menu.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Endless Runner Dash</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      background: #0f172a;
+      color: #fff;
+      text-align: center;
+      font-family: Arial;
+    }
+
+    canvas {
+      background: #020617;
+      display: block;
+      margin: 15px auto;
+      border-radius: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>🏃 Endless Runner Dash</h2>
+  <div>Distance: <span id="score">0</span></div>
+
+  <canvas id="game" width="360" height="520"></canvas>
+
+  <script>
+    const c = document.getElementById("game");
+    const ctx = c.getContext("2d");
+
+    let player, obstacles, score, speed, gravity, jumping, playing;
+
+    function init() {
+      player = { x: 60, y: 420, w: 40, h: 40, dy: 0 };
+      obstacles = [];
+      score = 0;
+      speed = 4;
+      gravity = 0.7;
+      jumping = false;
+      playing = true;
+      document.getElementById("score").innerText = score;
+    }
+    init();
+
+    document.addEventListener("click", jump);
+    document.addEventListener("touchstart", jump);
+
+    function jump() {
+      if (!jumping) {
+        player.dy = -12;
+        jumping = true;
+      }
+    }
+
+    function spawnObstacle() {
+      obstacles.push({ x: 360, y: 440, w: 30, h: 40 });
+    }
+
+    function update() {
+      if (!playing) return;
+      ctx.clearRect(0, 0, c.width, c.height);
+
+      // Ground
+      ctx.fillStyle = "#334155";
+      ctx.fillRect(0, 480, 360, 40);
+
+      // Player
+      player.dy += gravity;
+      player.y += player.dy;
+      if (player.y >= 420) { player.y = 420; player.dy = 0; jumping = false; }
+      ctx.fillStyle = "#22d3ee";
+      ctx.fillRect(player.x, player.y, player.w, player.h);
+
+      // Obstacles
+      ctx.fillStyle = "#f43f5e";
+      obstacles.forEach(o => {
+        o.x -= speed;
+        ctx.fillRect(o.x, o.y, o.w, o.h);
+
+        if (
+          o.x < player.x + player.w &&
+          o.x + o.w > player.x &&
+          o.y < player.y + player.h &&
+          o.y + o.h > player.y
+        ) endGame();
+      });
+
+      obstacles = obstacles.filter(o => o.x > -50);
+
+      score++;
+      document.getElementById("score").innerText = score;
+      if (score % 150 === 0) speed += 0.5;
+
+      if (Math.random() < 0.02) spawnObstacle();
+
+      requestAnimationFrame(update);
+    }
+
+    function endGame() {
+      playing = false;
+      alert("Run Over! Distance: " + score);
+      // 👉 SHOW INTERSTITIAL AD HERE
+      init();
+      update();
+    }
+
+    update();
+  </script>
+  <script src="menu.js"></script>
+</body>
+
+</html>
