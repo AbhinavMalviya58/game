@@ -5,6 +5,7 @@ Snake Reloaded (Modern Snake)
 
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Snake Reloaded</title>
   <style>
     body {
@@ -12,12 +13,17 @@ Snake Reloaded (Modern Snake)
       color: #fff;
       text-align: center;
       font-family: Arial;
+      margin: 0;
+      touch-action: none;
     }
 
     canvas {
       background: #020617;
-      margin-top: 20px;
+      margin-top: 10px;
       border-radius: 12px;
+      max-width: 100%;
+      height: auto;
+      max-height: 80vh;
     }
   </style>
 </head>
@@ -50,6 +56,30 @@ Snake Reloaded (Modern Snake)
       if (e.key === "ArrowDown" && dir !== "UP") dir = "DOWN";
       if (e.key === "ArrowLeft" && dir !== "RIGHT") dir = "LEFT";
       if (e.key === "ArrowRight" && dir !== "LEFT") dir = "RIGHT";
+    });
+
+    // Touch Controls
+    let tsX = 0, tsY = 0;
+    document.addEventListener('touchstart', e => {
+      tsX = e.touches[0].clientX;
+      tsY = e.touches[0].clientY;
+    }, { passive: false });
+    document.addEventListener('touchmove', e => { e.preventDefault(); }, { passive: false }); // Prevent scroll
+    document.addEventListener('touchend', e => {
+      const teX = e.changedTouches[0].clientX;
+      const teY = e.changedTouches[0].clientY;
+      const dx = teX - tsX, dy = teY - tsY;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        if (Math.abs(dx) > 10) {
+          if (dx > 0 && dir !== "LEFT") dir = "RIGHT";
+          else if (dx < 0 && dir !== "RIGHT") dir = "LEFT";
+        }
+      } else {
+        if (Math.abs(dy) > 10) {
+          if (dy > 0 && dir !== "UP") dir = "DOWN";
+          else if (dy < 0 && dir !== "DOWN") dir = "UP";
+        }
+      }
     });
 
     function spawnFood() {

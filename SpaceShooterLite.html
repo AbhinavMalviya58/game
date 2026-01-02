@@ -3,8 +3,8 @@
 
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Space Shooter Lite</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       margin: 0;
@@ -12,6 +12,7 @@
       color: #fff;
       font-family: Arial;
       text-align: center;
+      touch-action: none;
     }
 
     canvas {
@@ -19,6 +20,9 @@
       display: block;
       margin: 15px auto;
       border-radius: 12px;
+      max-width: 100%;
+      height: auto;
+      max-height: 80vh;
     }
   </style>
 </head>
@@ -49,13 +53,19 @@
 
     document.addEventListener("mousemove", e => {
       const r = c.getBoundingClientRect();
-      player.x = e.clientX - r.left - player.w / 2;
+      const scale = c.width / r.width; // Mouse might need scaling if window checks are weird, but usually clientX is viewport. 
+      // Wait, mousemove uses local pixel coords if canvas is scaled? No, clientX is viewport. 
+      // So logic: `e.clientX - r.left` is pixels in viewport. 
+      // Multiplied by `c.width / r.width` gives pixels in canvas.
+      player.x = (e.clientX - r.left) * scale - player.w / 2;
     });
 
     document.addEventListener("touchmove", e => {
+      e.preventDefault();
       const r = c.getBoundingClientRect();
-      player.x = e.touches[0].clientX - r.left - player.w / 2;
-    });
+      const scale = c.width / r.width;
+      player.x = (e.touches[0].clientX - r.left) * scale - player.w / 2;
+    }, { passive: false });
 
     function shoot() {
       bullets.push({ x: player.x + 18, y: player.y });

@@ -4,6 +4,8 @@ Brick Breaker Plus
 <html>
 
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Brick Breaker Plus</title>
   <style>
     body {
@@ -11,12 +13,18 @@ Brick Breaker Plus
       color: #fff;
       text-align: center;
       font-family: Arial;
+      margin: 0;
+      touch-action: none;
     }
 
     canvas {
       background: #020617;
-      margin-top: 20px;
+      display: block;
+      margin: 20px auto;
       border-radius: 12px;
+      max-width: 100%;
+      height: auto;
+      max-height: 80vh;
     }
   </style>
 </head>
@@ -37,10 +45,17 @@ Brick Breaker Plus
       for (let i = 0; i < 6; i++)
         bricks.push({ x: i * 55 + 20, y: r * 25 + 40, hit: false });
 
-    document.addEventListener("mousemove", e => {
+    const getPos = (x) => {
       const rect = c.getBoundingClientRect();
-      paddle.x = e.clientX - rect.left - paddle.w / 2;
-    });
+      const scale = c.width / rect.width;
+      return (x - rect.left) * scale - paddle.w / 2;
+    };
+
+    document.addEventListener("mousemove", e => paddle.x = getPos(e.clientX));
+    document.addEventListener("touchmove", e => {
+      e.preventDefault();
+      paddle.x = getPos(e.touches[0].clientX);
+    }, { passive: false });
 
     function draw() {
       ctx.clearRect(0, 0, c.width, c.height);
